@@ -21,6 +21,17 @@ const loginValidation = (data) => {
 	return registerValidation.validate(data)
 }
 
+//Validar grup 
+const groupValidation = (data) => {
+	const registerValidation = Joi.object({
+	  	name: Joi.string().min(6).required(),
+	  	description: Joi.string().min(8).required(),
+	  	owner: Joi.string().required(),
+	  	members: Joi.array().unique().items(Joi.string())
+	})
+	return registerValidation.validate(data)
+}
+
 //segon registre
 const secondRegisterValidation = (data) => {
 	const registerValidation = Joi.object({
@@ -34,3 +45,4 @@ const secondRegisterValidation = (data) => {
 
 module.exports.registerValidation = registerValidation
 module.exports.loginValidation = loginValidation
+module.exports.groupValidation = groupValidation

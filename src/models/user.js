@@ -1,4 +1,37 @@
-let mongoose = require("../config/db")
+const mongoose = require('mongoose');
+
+//en cas que es vulgui mutejar un grup
+const chatMutedDateSchema = new mongoose.Schema ({
+    data: {
+      type: Boolean,
+      default: false,
+    },
+    endDate: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
+    _id : false,
+  },
+);
+
+//info del chat
+const userChatsSchema = new mongoose.Schema ({
+    data: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Chat',
+    },
+    unReadMessages: {
+      type: Number,
+      default: 0,
+    },
+    mute: chatMutedDateSchema,
+  },
+  {
+    _id : false,
+  },
+);
 
 let UserSchema = new mongoose.Schema({
   	username: {
@@ -12,6 +45,11 @@ let UserSchema = new mongoose.Schema({
     	required: true,
     	max: 255
   	},
+    //talent sharing
+    descripcio:{
+      type: String,
+      max: 255
+    },
   	email: {
   	  type: String,
   	  required: true,
@@ -24,9 +62,27 @@ let UserSchema = new mongoose.Schema({
   		max: 1024,
   		min: 6
   	},
-  	createdDate: { 
-  		type: Date, 
-  		default: Date.now 
-  	}
-})
-module.exports = mongoose.model('Users', UserSchema)
+    token:{
+      type: String
+    },
+    role: {
+      type: String,
+      enum: [
+        'admin',
+        'member',
+        'ordinary',
+      ],
+      default: 'ordinary',
+    },
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
+    socketID: {
+      type: String,
+      default: '',
+    }
+},{ timestamps : true})
+
+exports.UserSchema = UserSchema;
+exports.UserModel = mongoose.model('User', UserSchema);
