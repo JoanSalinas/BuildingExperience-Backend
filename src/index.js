@@ -11,11 +11,13 @@ const db = require("./config/db")
 //routes
 const publicRoute = require('./routes/public')
 const userRoute = require('./routes/user')
+const chatRoute = require('./routes/chat')
 const groupRoute = require('./routes/group')
+const adminRoute = require('./routes/admin')
 const errorHandler = require('./config/errorHandler')
 
 const socket = require('./controllers/socket')
-const verifyToken = require('./controllers/token')
+const { verifyToken, verifyAdmin } = require('./controllers/verify')
 /*
 
 const fs = require("fs");
@@ -46,20 +48,38 @@ app.use(errorHandler)
 
 //mostra la data i que vol fer a lo consola
 app.use((req, res, next) => {
-	console.log(`${new Date().toString()} => ${req.originalUrl}`)
+	if(req.header('auth-token')) console.log("User => " + req.header('auth-token'))
+	else console.log("Not an user")
+	console.log(`${new Date().toString()} =>  ${req.originalUrl}`)
 	next()
 })
 
 //rutes
-app.use('/auth', publicRoute)
+app.use('/public', publicRoute)
 app.use('/user', verifyToken, userRoute)
+app.use('/chat', verifyToken, chatRoute)
 app.use('/group', verifyToken, groupRoute)
+app.use('/admin', verifyToken, verifyAdmin, adminRoute)
 
-const server  = require('http').Server(app)
-const io = require('socket.io')(server/*, {
+const server  = require('http').createServer(app)
+const options = { /* ... */ };
+const io = require('socket.io')(server, options/*, {
 	path: '/chat'
 }*/)
+/* Per fer aixo s'ha de guardar despres el usuari, bastant lio ara mateix
+io.use(function(socket, next) {
+  var handshakeData = socket.request;
+  // make sure the handshake data looks good as before
+  // if error do this:
+    // next(new Error('not authorized'));
+  // else just call next
+  next();
+});
+*/
 socket(io);
+
+/*io.on('connection', socket => { 
+	console.log('hello')});*/
 
 //fa que escolti al port del envoirment o al 3000
 const PORT = process.env.PORT || 3000;

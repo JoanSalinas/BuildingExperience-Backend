@@ -1,5 +1,66 @@
 const mongoose = require('mongoose');
 
+const CommentSchema = new mongoose.Schema ({
+    creator: {
+		type: mongoose.Schema.Types.ObjectId,
+	 	ref: 'User'
+	},
+	text: {
+		type: String,
+		required: true,
+		min: 1,
+		max: 256
+	},
+});
+
+const PostSchema = new mongoose.Schema ({
+    creator: {
+		type: mongoose.Schema.Types.ObjectId,
+	 	ref: 'User'
+	},
+	title: {
+		type: String,
+		required: true,
+		max: 256
+	},
+	subtitol:{
+	 	type: String,
+	 	max: 500
+	},
+	text: {
+		type: String,
+		required: true,
+		min: 6,
+		max: 256
+	},
+	comments: [{
+	 	type: CommentSchema,
+	}],
+	//direccio de la imatge
+	image:{
+		type: String,
+	}
+});
+
+const ResourceSchema = new mongoose.Schema ({
+    creator: {
+		type: mongoose.Schema.Types.ObjectId,
+	 	ref: 'User'
+	},
+	title: {
+		type: String,
+		required: true,
+		max: 256
+	},
+	//ruta del recurs
+	text: {
+		type: String,
+		required: true,
+		min: 1,
+		max: 256
+	},
+});
+
 let GroupSchema = new mongoose.Schema({
 	name: {
 		type: String,
@@ -8,10 +69,20 @@ let GroupSchema = new mongoose.Schema({
 	 	min: 6,
 		max: 255
 	},
+	subtitle: {
+		type: String,
+	 	min: 6,
+		max: 511
+	},
 	description: {
 	  	type: String,
 	  	required: true,
 	  	min: 8,
+	  	max: 2048
+	},
+	image: {
+		type: String,
+	  	min: 5,
 	  	max: 2048
 	},
 	owner: {
@@ -23,10 +94,47 @@ let GroupSchema = new mongoose.Schema({
 	    enum: [
 	        'admin',
 	        'member',
+	        'project',
 	        'ordinary',
 	    ],
 	    default: 'ordinary',
 	},
+	//project values
+	numMembers:{
+		type: Number,
+	},
+	totalMembers:{
+		type: Number,	
+	},
+	state:{
+		type: String,
+	    enum: [
+	        'preparing',
+	        'underConstruction',
+	        'ended',
+	    ],
+	    default: 'preparing',
+	},
+	open: {
+		type: Boolean,
+		default: false,
+	},
+	city:{
+		type: String,
+	},
+	province:{
+		type:String,
+	},
+	location:{
+		type:String,
+	},
+	//
+	posts:[{
+		type: PostSchema,
+	}],
+	resources:[{
+		type: ResourceSchema,
+	}],
 	members: [{
 	 	type: mongoose.Schema.Types.ObjectId,
 	 	ref: 'User'

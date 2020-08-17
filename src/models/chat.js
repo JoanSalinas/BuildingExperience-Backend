@@ -37,11 +37,7 @@ const MessageSchema = new mongoose.Schema({
     }
 })
 
-const chatSchema = new mongoose.Schema({
-  _id:{
-    type: String,
-    unique:true
-  },
+const ChatSchema = new mongoose.Schema({
     name: {
       type: String,
       default: '',
@@ -65,12 +61,9 @@ const chatSchema = new mongoose.Schema({
       default: 'group',
     },
     messages:[ MessageSchema ],
-    latestMessageDate: {
-      type: Date,
-      default: Date.now,
-    },
+    latestMessage: MessageSchema,
 
   },{ timestamps : true});
 
-
-module.exports = mongoose.model('Chat', chatSchema);
+exports.ChatSchema = ChatSchema;
+exports.ChatModel =  mongoose.model('Chat', ChatSchema);

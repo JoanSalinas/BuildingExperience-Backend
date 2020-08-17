@@ -7,6 +7,12 @@ router.get('/group', async (req, res) => {
 	return groupController.getGroup(req, res)
 })
 
+router.get('/myGroups', async (req, res) => {
+	return groupController.getMyGroups(req, res)
+})
+router.get('/myGroupMembers', async (req, res) => {
+	return groupController.getMyGroupMembers(req, res)
+})
 router.post('/create', async (req, res) => {
 	return groupController.createGroup(req, res)
 })

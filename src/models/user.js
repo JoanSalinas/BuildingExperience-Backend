@@ -45,6 +45,10 @@ let UserSchema = new mongoose.Schema({
     	required: true,
     	max: 255
   	},
+    image:{
+      type: String,
+      default: 'https://www.clipartmax.com/png/small/18-187369_face-glasses-clipart-funny-face-icon-png.png',
+    },
     //talent sharing
     descripcio:{
       type: String,

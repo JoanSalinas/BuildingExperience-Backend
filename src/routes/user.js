@@ -26,10 +26,11 @@ router.get('/user', (req, res) => {
 	return userController.getUser(req, res)
 })
 
+
 //per fer test
-router.get('/allUsers', (req, res) => {
+/*router.get('/allUsers', (req, res) => {
 	return userController.getAllUsers(req, res)
-})
+})*/
 
 /*
 // UPDATE

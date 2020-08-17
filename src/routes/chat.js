@@ -18,4 +18,10 @@ router.put('/leaveChat', async (req, res) => {
 	return chatController.removeUser(req, res)
 })
 
+router.get('/getChats', (req, res) => {
+	return chatController.getMyChats(req, res)
+})
+router.get('/getChatMessages', (req, res) => {
+	return chatController.getChatMessages(req, res)
+})
 module.exports = router

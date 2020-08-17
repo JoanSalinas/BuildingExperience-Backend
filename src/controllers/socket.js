@@ -1,28 +1,59 @@
-const verifyToken = require('./token');
-const UserModel =require('../models/user');
-const ChatModel =require('../models/chat');
-//{"socketId": socket, "userId": user_id}
-const connectedUsers = [];
+const { verifyTokenSocket } = require('./verify');
+const { UserModel } =require('../models/user');
+const { ChatModel } =require('../models/chat');
+
+const connectedUsers = []; //{"socketId": socket, "userId": user_id}
 
 const socket = function(io) {
 
-	io.on('connection', function(socket) {
-		socket.join('Room Cohousing');
-		console.log('Joined Cohousing');
+	io.on('connection', function(socket) {		
 		
+		// --->>>connectedUsers.find(user => user.socketId === socket.id) //Aixo busca el user en connected users
 
+		/*//Checking connection
+		if(!socket.handshake.query.token){
+			console.log('Unable to verify token')
+			socket.disconnect();
+			return;
+		} else{
+			const user = connectedUsers.find(function(user) { 
+					return user.userId = socket.handshake.query.token;
+				})
+			if(user){}
+			else{
+				let userId = verifyTokenSocket(socket.handshake.query.token)
+				if(userId){
+					const user = {socketId: socket.id, userId: userId._id};
+					socket.user = userId;
+					connectedUsers.push(user);
+					socket.authenticated = true;
+					console.log('Token verified')
+				} else{
+					console.log('Unable to verify token')
+					socket.disconnect();
+					return;
+				}
+			}
+		}*/
+		console.log(connectedUsers)
 		//un socket login per guardar el socket nou de cada user conectat
 		//aqui suposo que s'hauria de entrar a tots els chats
 		socket.authenticated = false;
 		socket.on('auth', function(info) {
-			let token = verifyToken(info.token)
-			if(token){
-				const user = {socketId: socket.id, userId: userId};
-				socket.user = info.userId;
+			console.log("--> Checking token ----------------")
+			if(!info){
+				socket.disconnect();
+				return;
+			}
+			let userId = verifyTokenSocket(info.token)
+			if(userId){
+				const user = {socketId: socket.id, userId: userId._id};
 				connectedUsers.push(user);
+				console.log('test', connectedUsers.find(x => x.socketId === socket.id));
 				socket.authenticated = true;
 			} else{
 				socket.disconnect();
+				console.log('--> Unable to verify token')
 				return;
 			}
 		})
@@ -34,21 +65,22 @@ const socket = function(io) {
 				return;
 			}
 			for(var i=0; i<connectedUsers.length; i++) {
-				if(connectedUsers[i] == socket.user) {
+				if(connectedUsers[i].socketId == socket.id) {
+					console.log('--> disconnecting user ', connectedUsers[i]);
 					delete connectedUsers[connectedUsers[i]];
 				}
 			}
 		})
 
 		//t'uneixes a una chatroom, el nom del qual li pases dintre de info
-		socket.on('join chatRoom', function(info) {
+		socket.on('join chatRoom with bd', function(info) {
 			if(!socket.authenticated) {
 				socket.disconnect();
 				return;
 			}
 			if(!info.room) return;
 			//afegim al chat el usuari
-			ChatModel.findAndModify({
+			ChatModel.findOneAndUpdate({
 					query: { _id : info.chatId },
 					update: { $push: {members: info.userId } }, 
 			})
@@ -61,9 +93,31 @@ const socket = function(io) {
 		//llista de les rooms en les que estas
 		socket.on('list rooms', function(info) {
 			let rooms = Object.keys(socket.rooms);
-			console.log(rooms);
+			console.log('--> Listing rooms', rooms);
 			socket.to(socket.id).emit(rooms);
 		})
+
+		//t'uneixes a una chatroom, el nom del qual li pases dintre de info
+		socket.on('join chatRoom', function(info) {
+			console.log(info)
+			if(!socket.authenticated) {
+				socket.disconnect();
+				return;
+			}
+			if(!info.room) return;
+			//el nom de la room sera unic o sera el chatId ja es veura
+			//tuneixes a la sala i avises als altres
+			socket.join(info.room)
+			socket.broadcast.to(info.room).emit(info.user + " joined the chatroom")
+		})
+
+		//llista de les rooms en les que estas
+		socket.on('list rooms', function(info) {
+			let rooms = Object.keys(socket.rooms);
+			console.log('--> Listing rooms', rooms);
+			socket.to(socket.id).emit(rooms);
+		})
+
 
 		//envia un nou missatge a una socket.id que li pases
 		//nomes per privats
@@ -96,9 +150,8 @@ const socket = function(io) {
 				}
 
 				//mirem si a qui li enviem el missatge esta online, en cas negatiu user sera undefined
-				const user = connectedUsers.find(function(element) { 
-					return element.userId = info.recieverUserId;
-				})
+				const user = connectedUsers.find(x => x.userId === info.recieverUserId)
+
 				//s'envia el missatge si esta online
 				if(connectedUsers[user.socketId]){
 
@@ -112,29 +165,67 @@ const socket = function(io) {
 				}
 			}
 		});
+		socket.on('new message', function(info) {
+			if(!socket.authenticated) {
+				socket.disconnect();
+				return;
+			}
+			else{
+				let messageType = info.messageType ? info.messageType : 'text';
+				let user = connectedUsers.find(user => user.socketId === socket.id);
+				//existeix ja un chat
+				if(info.chatId){
+					ChatModel.findOneAndUpdate(
+						{ _id : info.chatId },
+						{ $push: {messages: { user: user.userId, text: info.message.text, messageType: messageType} } }, 
+						{new: true}
+					).then((result)=>{
+						//resultat
+						console.log("Teoricament ha creat un missatge nou", info, result)
+						socket.broadcast.to(info.chatId).emit(info.chatId, { message: info.message});
+						//io.sockets.in(info.chatId).emit('group message', { message: info.message});
+					})
+				}
+				else{
+					//afegim el missatge i el chat a la bd
+					ChatModel.insert( {
+					 	members:  [ user.userId, info.recieverUserId ] , chatType: "private", messages: { user:user.userId, text: info.message.text, messageType: messageType}
+					})
+					.then((result)=>{
+						//resultat
+						socket.broadcast.to(info.chatId).emit(info.chatId, { message: info.message});
+						console.log("Teoricament ha creat un chat nou")
+					})
+				}
+			}
+		});
 		
-		//missatge de grup
+		//missatge de grup 
 		socket.on('new group message', function(info) {
 			if(!socket.authenticated) {
 				socket.disconnect();
 				return;
 			}
 			else{
+				let messageType = info.messageType ? info.messageType : 'text';
+				let user = connectedUsers.find(user => user.socketId === socket.id);
 				//existeix ja un chat
 				if(info.chatId){
-					ChatModel.findAndModify({
-						query: { _id : info.chatId },
-						update: { $push: {messages: { user: info.userId, text: info.message, messageType: info.messageType} } }, 
-						new: true
-					}).then((result)=>{
+					ChatModel.findOneAndUpdate(
+						{ _id : info.chatId },
+						{ $push: {messages: { user: user.userId, text: info.message.text, messageType: messageType} } }, 
+						{new: true}
+					).then((result)=>{
 						//resultat
-						console.log("Teoricament ha creat un missatge nou")
-						socket.to('result._id').emit(info.message);
+						console.log("Teoricament ha creat un missatge nou", info)
+						socket.broadcast.to(info.chatId).emit(info.chatId, { message: info.message});
+						//io.sockets.in(info.chatId).emit('group message', { message: info.message});
 					})
 				}
 			}
+
 		});
-		
+
 		// teoricament se li pasa dintre de info una llista de usuaris i el nom de la sala
 		socket.on('new chatRoom', function(info) {
 			if(!socket.authenticated) {
@@ -159,6 +250,7 @@ const socket = function(io) {
 		});
 	})
 }
+
 /*
 const sockets = function(io) {
   
