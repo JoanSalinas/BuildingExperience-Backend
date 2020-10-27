@@ -20,6 +20,14 @@ router.post('/create', async (req, res) => {
 router.put('/addUser', async (req, res) => {
 	return groupController.addUser(req, res)
 })
-
-
+router.put('/joinGroup', async (req, res) => {
+	console.log("hey")
+	return groupController.joinGroup(req, res)
+})
+router.put('/commentPost', async (req, res) => {
+	return groupController.addPostComment(req, res)
+})
+router.put('/addPostLike', async (req, res) => {
+	return groupController.addPostLike(req, res)
+})
 module.exports = router

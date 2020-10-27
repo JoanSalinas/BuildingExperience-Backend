@@ -12,7 +12,13 @@ const CommentSchema = new mongoose.Schema ({
 		max: 256
 	},
 });
-
+const LikeSchema = new mongoose.Schema ({
+    user: {
+		type: mongoose.Schema.Types.ObjectId,
+	 	ref: 'User',
+	 	unique:true
+	},
+});
 const PostSchema = new mongoose.Schema ({
     creator: {
 		type: mongoose.Schema.Types.ObjectId,
@@ -33,14 +39,17 @@ const PostSchema = new mongoose.Schema ({
 		min: 6,
 		max: 256
 	},
+	likes:[{
+		type: LikeSchema
+	}],
 	comments: [{
-	 	type: CommentSchema,
+	 	type: CommentSchema
 	}],
 	//direccio de la imatge
 	image:{
 		type: String,
 	}
-});
+},{ timestamps : true });
 
 const ResourceSchema = new mongoose.Schema ({
     creator: {
@@ -53,7 +62,7 @@ const ResourceSchema = new mongoose.Schema ({
 		max: 256
 	},
 	//ruta del recurs
-	text: {
+	link: {
 		type: String,
 		required: true,
 		min: 1,
@@ -156,3 +165,6 @@ GroupSchema.statics.addUser = async function(id, args) {
 
 exports.GroupSchema = GroupSchema;
 exports.GroupModel = mongoose.model('Group', GroupSchema);
+exports.PostModel = mongoose.model('Post', PostSchema);
+exports.CommentModel = mongoose.model('Comment', CommentSchema);
+exports.ResourceModel = mongoose.model('Resource', ResourceSchema);

@@ -181,7 +181,7 @@ const socket = function(io) {
 						{new: true}
 					).then((result)=>{
 						//resultat
-						console.log("Teoricament ha creat un missatge nou", info, result)
+						console.log("Teoricament ha creat un missatge nou", info)
 						socket.broadcast.to(info.chatId).emit(info.chatId, { message: info.message});
 						//io.sockets.in(info.chatId).emit('group message', { message: info.message});
 					})

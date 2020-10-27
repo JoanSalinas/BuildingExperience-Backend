@@ -53,8 +53,6 @@ module.exports.addUser = async (req, res) => {
 	if(!req.query.group){
 		return res.status(400).send('missing url parameter: group');
 	}
-	console.log(req.body.id);
-	console.log(req.query.group);
 
 	const groupExists = await GroupModel.findOne({ _id: req.query.group});
 	if(!groupExists) return res.status(400).send('Group doesnt exists')

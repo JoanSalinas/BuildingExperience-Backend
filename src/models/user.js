@@ -47,11 +47,12 @@ let UserSchema = new mongoose.Schema({
   	},
     image:{
       type: String,
-      default: 'https://www.clipartmax.com/png/small/18-187369_face-glasses-clipart-funny-face-icon-png.png',
+      default: '/profilePictures/defaultColorUser.png',
     },
     //talent sharing
     descripcio:{
       type: String,
+      default:'Membre de Som Cohousing',
       max: 255
     },
   	email: {

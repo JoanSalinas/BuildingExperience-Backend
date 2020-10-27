@@ -10,6 +10,10 @@ router.get('/allUsers', (req, res) => {
 router.get('/allGroups', (req, res) => {
 	return groupController.getAllGroups(req, res)
 })
+router.put('/addPost', (req, res) => {
+	return groupController.addPost(req, res)
+})
+
 router.post('/createNew', (req, res) => {
 	return newsController.createNew(req, res)
 })
