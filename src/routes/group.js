@@ -13,10 +13,12 @@ router.get('/myGroups', async (req, res) => {
 router.get('/myGroupMembers', async (req, res) => {
 	return groupController.getMyGroupMembers(req, res)
 })
+router.get('/exploreGroups', async (req, res) => {
+	return groupController.exploreGroupsWithId(req, res)
+})
 router.post('/create', async (req, res) => {
 	return groupController.createGroup(req, res)
 })
-
 router.put('/addUser', async (req, res) => {
 	return groupController.addUser(req, res)
 })
@@ -30,4 +32,6 @@ router.put('/commentPost', async (req, res) => {
 router.put('/addPostLike', async (req, res) => {
 	return groupController.addPostLike(req, res)
 })
+
+
 module.exports = router

@@ -5,7 +5,7 @@ const { ChatModel } = require('../models/chat');
 //const { PostModel } = require('../models/group');
 //const { ChatModel } = require('../models/chat');
 const { groupValidation } = require('../config/schemas')
-
+const { verifyToken } = require('./verify')
 
 module.exports.getGroup = (req, res) => {
   if(!req.body.name){
@@ -80,10 +80,18 @@ module.exports.exploreProjects = (req, res) => {
 	  res.status(500).json(err)
 	})
 }
-
+module.exports.exploreGroupsWithId = (req, res) => {
+	GroupModel.find({
+		members: { $nin: req.user._id }
+	},{_id: 1, name: 1, city:1, province:1, subtitle:1,location:1, description:1,state:1,numMembers:1, totalMembers:1, image: 1}).then(doc =>{
+	  res.json(doc)
+	}).catch(err =>{
+	  res.status(500).json(err)
+	})
+}
 module.exports.exploreGroups = (req, res) => {
 	GroupModel.find({
-	},{_id: 1, name: 1, city:1, province:1,location:1, description:1,state:1,numMembers:1, totalMembers:1, image: 1}).then(doc =>{
+	},{_id: 1, name: 1, city:1, province:1, subtitle:1,location:1, description:1,state:1,numMembers:1, totalMembers:1, image: 1}).then(doc =>{
 	  res.json(doc)
 	}).catch(err =>{
 	  res.status(500).json(err)
@@ -130,7 +138,7 @@ module.exports.addUser = async(req, res) => {
 	await addUserFunction(groupExists.chat, req.body.userId);
 	GroupModel.updateOne(
 			{ _id: req.body.groupId}, 
-			{ $push: { members : req.body.userId } }).then(doc => {
+			{ $addToSet: { members : req.body.userId } }).then(doc => {
 		if(!doc || doc.length === 0){
 			return res.status(500).send(doc)
 		}
@@ -218,7 +226,7 @@ module.exports.addPostLike = async(req, res) => {
 	}
 	GroupModel.findOneAndUpdate(
 		{ _id : req.body.groupId },
-		{ $push: { 'posts.$[outer].likes' : req.user._id } },
+		{ $addToSet: { 'posts.$[outer].likes' : req.user._id } },
 		{ "arrayFilters": [{"outer._id": req.body.postId}]}
 	).then(doc => {
 		if(!doc || doc.length === 0){
@@ -277,7 +285,7 @@ async function createChat(info){
 async function addUserFunction(chatId, userId){
 	return ChatModel.updateOne(
 			{ _id: chatId}, 
-			{ $push: { members : userId } }).then(doc => {
+			{ $addToSet: { members : userId } }).then(doc => {
 		if(!doc || doc.length === 0){
 			console.log("Error no s'ha pogut afegir a "+userId+" al chat, resposta buida")
 			return false

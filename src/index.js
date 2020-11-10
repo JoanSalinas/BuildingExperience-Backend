@@ -51,11 +51,11 @@ const app = express()
 	return res.status(200).send('Ok FALSO')
 })*/
 app.use(cookieParser())
-app.use(bodyParser.json({ limit: '150mb', uploadDir: __dirname + '/public/uploads'}))
-app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+app.use(bodyParser.json(/*{ limit: '150mb', uploadDir: __dirname + '/public/uploads'})*/)
+/*app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 	limit: '150mb',
 	extended: true
-}));
+}));*/
 
 app.use(cors({credentials: true, origin: 'http://localhost:3000'}))
 //app.use(cors({credentials: true, origin: '*'}))
