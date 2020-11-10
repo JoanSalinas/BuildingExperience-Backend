@@ -51,7 +51,7 @@ const app = express()
 	return res.status(200).send('Ok FALSO')
 })*/
 app.use(cookieParser())
-app.use(bodyParser.json(/*{ limit: '150mb', uploadDir: __dirname + '/public/uploads'})*/)
+app.use(bodyParser.json(/*{ limit: '150mb', uploadDir: __dirname + '/public/uploads'})*/))
 /*app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 	limit: '150mb',
 	extended: true
