@@ -2,7 +2,7 @@ const User = require('../models/user')
 const userController = require('../controllers/user')
 const router = require("express").Router()
 var multer  = require('multer')
-var upload = multer({ dest: 'uploads/', limits: { fileSize: maxSize } })
+var upload = multer({ dest: 'uploads/'/*, limits: { fileSize: maxSize } */})
 /*
 //create new user //publica
 // POST localhost:3000/user
