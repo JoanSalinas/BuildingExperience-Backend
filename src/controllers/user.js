@@ -18,7 +18,6 @@ module.exports.authenticate = function authenticate({ username, password }) {
 	}).then( doc => {
 	if (user && bcrypt.compareSync(password, user.hash)) {
 		const { hash, ...userWithoutHash } = user.toObject();
-		//const token = jwt.sign({ sub: user.id }, config.secret); 
 		const token = jwt.sign({ sub: user.id }, process.env.TOKEN_SECRET); 
 		return {
 			...userWithoutHash,
@@ -36,11 +35,7 @@ module.exports.createUser = async (req, res) => {
 		return res.status(400).send('Request body is missing')
 	}
 	if(req.header('auth-token')) return res.status(400).send('Already logged')
-	// let user = {
-	//   name: 'firstname lastname',
-	//   email: 'email@gmail.com'
-	// } =>
-	//let model = new UserModel(req.body)
+
 
 	//Validar
 	const { error } = registerValidation(req.body)
@@ -84,9 +79,6 @@ module.exports.login = async (req, res) => {
 	//comprobar si existeix el correu
 	const user = await UserModel.findOne({ email: req.body.email})
 	if(!user) return res.status(400).send({error:'Email or password is wrong'})
-	//implementar mes endavant
-	//const usernameExists = await UserModel.findOne({ username: req.body.username})
-	//else if(!usernameExists) return res.status(400).send('Username already exists')
 
 	//Comprovem la password
 	const validPass = await bcrypt.compare(req.body.password, user.password)
@@ -119,17 +111,11 @@ module.exports.loginWeb = async (req, res) => {
 	//creem i assignem el token del usuari
 	const token = jwt.sign({_id: user._id}, process.env.TOKEN_SECRET)
 
-	//Posem el token a la cookie
-	/*res.cookie('token', token, {
-		maxAge: 60 * 60 * 1000, // 1 hour
-		httpOnly: true,
-		//secure: true, //secure es sol https, de moment no
-		//sameSite: true,
-	})*/
+
 	return res.cookie('token', token, {
 		maxAge: 60 * 60 * 1000, // 1 hour
 		httpOnly: true,
-		//secure: true, //secure es sol https, de moment no
+		//secure: true, //secure es sol https, de moment no tenim https
 		//sameSite: true,
 	}).send({'authToken': token,'username': user.username, 'id': user._id})
 }
@@ -203,21 +189,19 @@ module.exports.updateMyImage = (req, res) => {
 	let fileName = req.user._id.replace(".","")
 	if(!req.body.data || !req.body.type) return res.status(400).send('Missing image information')
 
-	const imageExtension = checkFormatAndGetExtension(req.body.type)
+	let imageExtension = checkFormatAndGetExtension(req.body.type)
 	var imageBuffer = Buffer.from(req.body.data, 'base64');
-	fs.writeFile(__dirname+'/../../public/profilePictures/' + req.user._id + imageExtension, imageBuffer ,function (err) {
+	fs.writeFile(__dirname+'/../../public/profilePictures/' + fileName + imageExtension, imageBuffer ,function (err) {
 		if (err){
 			console.log("error guardar imatge", err); 
 			return res.status(500).json(err)
 		} 
 		else {
 			
-			UserModel.findOneAndUpdate({
+			UserModel.updateOne({
 				_id: req.user._id
 			}, {
 				image: '/profilePictures/'+ fileName + imageExtension
-			}, {
-				new: true
 			})
 			.then(doc => {
 				console.log('Saved!');

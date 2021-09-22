@@ -29,6 +29,10 @@ router.put('/joinGroup', async (req, res) => {
 router.put('/commentPost', async (req, res) => {
 	return groupController.addPostComment(req, res)
 })
+/*
+router.put('/addPost', async (req, res) => {
+	return groupController.addPost(req, res)
+})*/
 router.put('/addPostLike', async (req, res) => {
 	return groupController.addPostLike(req, res)
 })

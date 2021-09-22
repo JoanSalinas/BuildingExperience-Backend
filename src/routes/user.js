@@ -3,19 +3,6 @@ const userController = require('../controllers/user')
 const router = require("express").Router()
 var multer  = require('multer')
 var upload = multer({ dest: 'uploads/'/*, limits: { fileSize: maxSize } */})
-/*
-//create new user //publica
-// POST localhost:3000/user
-router.post('/register', async (req, res) => {
-	return userController.createUser(req, res)
-})
-//publica
-//POST localhost:3000/user/login
-router.post('/login', async (req, res) => {
-	return userController.login(req, res)
-})*/
-
-//No cal de moment
 
 // GET localhost:3000/myUser
 router.get('/myUser', (req, res) => {
@@ -31,11 +18,6 @@ router.get('/user', (req, res) => {
 router.get('/checkWeb', (req, res) => {
 	return userController.checkWeb(req, res)
 })
-
-//per fer test
-/*router.get('/allUsers', (req, res) => {
-	return userController.getAllUsers(req, res)
-})*/
 
 
 // UPDATE

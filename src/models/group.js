@@ -39,7 +39,8 @@ const PostSchema = new mongoose.Schema ({
 		max: 256
 	},
 	likes:[{
-		type: LikeSchema
+		type: mongoose.Schema.Types.ObjectId,
+	 	ref: 'User'
 	}],
 	comments: [{
 	 	type: CommentSchema
@@ -59,6 +60,15 @@ const ResourceSchema = new mongoose.Schema ({
 		type: String,
 		required: true,
 		max: 256
+	},
+	type:{
+		type: String,
+		num: [
+	        'link',
+	        'pdf',
+	        'none'
+	    ],
+	    default: 'none',
 	},
 	//ruta del recurs
 	link: {

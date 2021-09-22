@@ -1,5 +1,5 @@
 var fs = require('fs');
-
+const ObjectId = require('mongodb').ObjectID;
 const { GroupModel, PostModel, ResourceModel, CommentModel } = require('../models/group');
 const { ChatModel } = require('../models/chat');
 //const { PostModel } = require('../models/group');
@@ -8,93 +8,93 @@ const { groupValidation } = require('../config/schemas')
 const { verifyToken } = require('./verify')
 
 module.exports.getGroup = (req, res) => {
-  if(!req.body.name){
-    return res.status(400).send('missing url parameter: name')
-  }
-  GroupModel.findOne({
-    name: req.body.name
-  }).then(doc =>{
-    res.json(doc)
-  }).catch(err =>{
-    res.status(500).json(err)
-  })
+	if(!req.body.name){
+		return res.status(400).send('missing url parameter: name')
+	}
+	GroupModel.findOne({
+		name: req.body.name
+	}).then(doc =>{
+		res.json(doc)
+	}).catch(err =>{
+		res.status(500).json(err)
+	})
 }
 
 module.exports.getAllGroups = (req, res) => {
-  GroupModel.find({})
-  .then(doc =>{
-    res.json(doc)
-  }).catch(err =>{
-    res.status(500).json(err)
-  })
+	GroupModel.find({})
+	.then(doc =>{
+		res.json(doc)
+	}).catch(err =>{
+		res.status(500).json(err)
+	})
 }
 
 module.exports.getProject = (req, res) => {
-  if(!req.body.name){
-    return res.status(400).send('missing url parameter: name')
-  }
-  GroupModel.findOne({
-    name: req.body.name,
-    type: 'project'
-  }).then(doc =>{
-    res.json(doc)
-  }).catch(err =>{
-    res.status(500).json(err)
-  })
+	if(!req.body.name){
+		return res.status(400).send('missing url parameter: name')
+	}
+	GroupModel.findOne({
+		name: req.body.name,
+		type: 'project'
+	}).then(doc =>{
+		res.json(doc)
+	}).catch(err =>{
+		res.status(500).json(err)
+	})
 }
 module.exports.getMyGroups = (req, res) => {
 	let userId = req.user._id;
 	GroupModel.find({
-	  members : userId
-	},{_id: 1, name: 1, image: 1, subtitle:1, description:1, members:1, owner:1, posts:1, resources:1 })
+		members : userId
+	},{_id: 1, name: 1, image: 1, subtitle:1, description:1, members:1, owner:1, posts:1, resources:1})
 		.populate('members','name image descripcio')
 		.populate('resources.creator','name username image')
 		.populate('posts.creator','name username image')
 		.populate('posts.comments.creator','name username image')
 	.then(doc =>{
-	  res.json(doc)
+		res.json(doc)
 	}).catch(err =>{
-	  res.status(500).json(err)
+		res.status(500).json(err)
 	})
 }
-//TODO veure que torna dels usuaris
+
 module.exports.getMyGroupMembers = (req, res) => {
 	let userId = req.user._id;
 	GroupModel.find({
-	  members: userId,
-	  name: req.body.name
+		members: userId,
+		name: req.body.name
 	},{_id:0, members:1}).populate('members','name username').then(doc =>{
-	  res.json(doc)
+		res.json(doc)
 	}).catch(err =>{
-	  res.status(500).json(err)
+		res.status(500).json(err)
 	})
 }
 
 module.exports.exploreProjects = (req, res) => {
 	GroupModel.find({
-	  type: 'project',
-	  open: true
+		type: 'project',
+		open: true
 	},{_id: 1, name: 1, city:1, province:1,location:1, description:1,state:1,numMembers:1, totalMembers:1, image: 1}).then(doc =>{
-	  res.json(doc)
+		res.json(doc)
 	}).catch(err =>{
-	  res.status(500).json(err)
+		res.status(500).json(err)
 	})
 }
 module.exports.exploreGroupsWithId = (req, res) => {
 	GroupModel.find({
 		members: { $nin: req.user._id }
 	},{_id: 1, name: 1, city:1, province:1, subtitle:1,location:1, description:1,state:1,numMembers:1, totalMembers:1, image: 1}).then(doc =>{
-	  res.json(doc)
+		res.json(doc)
 	}).catch(err =>{
-	  res.status(500).json(err)
+		res.status(500).json(err)
 	})
 }
 module.exports.exploreGroups = (req, res) => {
 	GroupModel.find({
 	},{_id: 1, name: 1, city:1, province:1, subtitle:1,location:1, description:1,state:1,numMembers:1, totalMembers:1, image: 1}).then(doc =>{
-	  res.json(doc)
+		res.json(doc)
 	}).catch(err =>{
-	  res.status(500).json(err)
+		res.status(500).json(err)
 	})
 }
 
@@ -102,20 +102,18 @@ module.exports.createGroup = async (req, res) => {
 	if(!req.body){
 		return res.status(400).send('Request body is missing')
 	}
-	//const { error } = groupValidation(req.body)
-  	//if(error) return res.status(400).send(error.details[0].message)
-  	let group = new GroupModel(req.body);
-  	group.members = req.user._id;
-  	
+	let group = new GroupModel(req.body);
+	group.members = req.user._id;
+	
 
-  	const nameExists = await GroupModel.findOne({ name: req.body.name})
+	const nameExists = await GroupModel.findOne({ name: req.body.name})
 	if(nameExists) return res.status(400).send('Name of the group already exists')
 
 	//Creem el chat i pillem la id
 	let chat = await createChat(group)
 	if(chat) group.chat = chat
 
-  	group.save().then(doc => {
+	group.save().then(doc => {
 		if(!doc || doc.length === 0){
 			return res.status(500).send(doc)
 		}
@@ -176,25 +174,58 @@ module.exports.joinGroup = async(req, res) => {
 }
 //Afegeix un post al grup
 module.exports.addPost = async(req, res) => {
-
+	let hasImage = false;
 	if(!req.body){
 		return res.status(400).send('Request body is missing');
 	}
 	let post = new PostModel(req.body);
 	post.creator = req.user._id;
-	post.likes = 0;
-	GroupModel.updateOne(
+	post.likes = [];
+	post.comments = [];
+	//Sense imatge
+	if(!req.body.data){
+		GroupModel.updateOne(
 			{ _id: req.body.groupId}, 
-			{ $push: { posts : post } }).then(doc => {
-		if(!doc || doc.length === 0){
-			return res.status(500).send(doc)
-		}
-		res.header().send(doc);
-		//return res.status(201).json({error:false, doc});
-	}).catch(err => {
-		res.status(500).json(err)
-	});
-	//GroupModel.addUser(userId, {name, description})
+			{ $push: { posts : post } })
+		.then(doc => {
+			if(!doc || doc.length === 0){
+				return res.status(500).send(doc)
+			}
+			res.status(200).send({"id": post._id});
+		}).catch(err => {
+			res.status(500).json(err)
+		});
+	}
+	//Amb imatge
+	else if(req.body.data && req.body.type){
+		let fileName = post._id;
+		let imageExtension = checkFormatAndGetExtension(req.body.type)
+		post.image = '/postPictures/'+ fileName + imageExtension;
+		var imageBuffer = Buffer.from(req.body.data, 'base64');
+		fs.writeFile(__dirname+'/../../public/postPictures/' + fileName + imageExtension, imageBuffer ,function (err) {
+			if (err){
+				console.log("error guardar imatge", err); 
+				return res.status(500).json(err)
+			} 
+			else {
+				GroupModel.updateOne({
+					_id: req.body.groupId
+				},{
+					$push: { posts : post } 
+				})
+				.then(doc => {
+					if(!doc || doc.length === 0){
+						return res.status(500).send(doc)
+					}
+					return res.status(200).json({"id": post._id})
+				})
+				.catch(err => {
+					return res.status(500).json(err)
+				})
+			}
+		});
+	}
+	else return res.status(400).send('Missing image information')
 }
 
 //Afegeix un comentari al post
@@ -217,7 +248,6 @@ module.exports.addPostComment = async(req, res) => {
 	}).catch(err => {
 		res.status(500).json(err)
 	});
-	//GroupModel.addUser(userId, {name, description})
 }
 
 module.exports.addPostLike = async(req, res) => {
@@ -226,7 +256,7 @@ module.exports.addPostLike = async(req, res) => {
 	}
 	GroupModel.findOneAndUpdate(
 		{ _id : req.body.groupId },
-		{ $addToSet: { 'posts.$[outer].likes' : req.user._id } },
+		{ $addToSet: { 'posts.$[outer].likes' : ObjectId(req.user._id) }},
 		{ "arrayFilters": [{"outer._id": req.body.postId}]}
 	).then(doc => {
 		if(!doc || doc.length === 0){
@@ -237,7 +267,6 @@ module.exports.addPostLike = async(req, res) => {
 	}).catch(err => {
 		res.status(500).json(err)
 	});
-	//GroupModel.addUser(userId, {name, description})
 }
 
 //Afegeix un recurs al grup
@@ -258,7 +287,6 @@ module.exports.addResource = async(req, res) => {
 	}).catch(err => {
 		res.status(500).json(err)
 	});
-	//GroupModel.addUser(userId, {name, description})
 }
 //de moment es fa servir sol en crear group
 async function createChat(info){
@@ -337,4 +365,18 @@ function checkFormatAndGetExtension(type){
 //decode de la imatge
 function decodeImage(image){
 	return new Buffer(data, 'base64');
+}
+
+function checkFormatAndGetExtension(type){
+	const allowed = new Array('image/jpeg', 'image/jpg', 'image/png');
+	try {
+		if (allowed.includes(type)){
+		    return "."+type.substring(6,10)
+		}
+	}
+	catch(err){
+		console.log("Bad image extension", err); 
+		throw new Error('Bad image extension');
+	}
+	
 }
